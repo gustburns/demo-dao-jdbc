@@ -44,9 +44,9 @@ public class SellerDaoJDBC implements SellerDAO{
 		ResultSet rs = null;
 		try {
 			String query = "SELECT seller.* , department.Name as DepName "
-					+ "FROM seller "
-					+ "INNER JOIN department ON seller.DepartmentId = department.Id"
-					+ "WHERE seller.Id = ?";
+					+ " FROM seller "
+					+ " INNER JOIN department ON seller.DepartmentId = department.Id"
+					+ " WHERE seller.Id = ?";
 			st = conn.prepareStatement(query);
 			st.setInt(1,id);
 			rs = st.executeQuery();
