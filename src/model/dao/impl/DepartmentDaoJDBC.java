@@ -4,6 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 
 import db.DB;
@@ -16,22 +18,66 @@ public class DepartmentDaoJDBC implements DepartmentDAO {
 
 	private Connection conn;
 
+	public DepartmentDaoJDBC(Connection conn) {
+		this.conn = conn;
+	}
+
 	@Override
 	public void insert(Department obj) {
-		// TODO Auto-generated method stub
-
+		PreparedStatement st = null;
+		ResultSet rs = null;
+		try {
+			String query = "INSERT INTO `coursejdbc`.`department`\r\n" + "(`Name`)" + "VALUES" + "(?)";
+			st = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+			st.setString(1, obj.getName());
+			int rowsAffected = st.executeUpdate();
+			if (rowsAffected > 0) {
+				rs = st.getGeneratedKeys();
+				if (rs.next()) {
+					int id = rs.getInt(1);
+					obj.setId(id);
+				}
+				DB.closeResultSet(rs);
+			} else {
+				throw new DbException("Erro inesperado, nenhuma linha afetada");
+			}
+		} catch (SQLException e) {
+			throw new DbException(e.getMessage());
+		} finally {
+			DB.closeStatement(st);
+		}
 	}
 
 	@Override
 	public void update(Department obj) {
-		// TODO Auto-generated method stub
-
+		PreparedStatement st = null;
+		ResultSet rs = null;
+		try {
+			String query = "UPDATE `coursejdbc`.`department`" + "SET `Name` = ?" + "WHERE Id = ?";
+			st = conn.prepareStatement(query);
+			st.setString(1, obj.getName());
+			st.setInt(2, obj.getId());
+			st.executeUpdate();
+		} catch (SQLException e) {
+			throw new DbException(e.getMessage());
+		} finally {
+			DB.closeStatement(st);
+		}
 	}
 
 	@Override
 	public void deleteById(Integer id) {
-		// TODO Auto-generated method stub
-
+		PreparedStatement st = null;
+		try {
+			String query = "DELETE FROM department WHERE Id = ?";
+			st = conn.prepareStatement(query);
+			st.setInt(1, id);
+			Integer rows = st.executeUpdate();
+		} catch (Exception e) {
+			throw new DbException(e.getMessage());
+		} finally {
+			DB.closeStatement(st);
+		}
 	}
 
 	@Override
@@ -58,15 +104,31 @@ public class DepartmentDaoJDBC implements DepartmentDAO {
 
 	private Department instantiateDepartment(ResultSet rs) throws SQLException {
 		Department dep = new Department();
-		dep.setId(rs.getInt("DepartmentId"));
-		dep.setName(rs.getString("DepName"));
+		dep.setId(rs.getInt("Id"));
+		dep.setName(rs.getString("Name"));
 		return dep;
 	}
 
 	@Override
 	public List<Department> findAll() {
-		// TODO Auto-generated method stub
-		return null;
+		PreparedStatement st = null;
+		ResultSet rs = null;
+		List<Department> list = new ArrayList<>();
+		try {
+			String query = "SELECT * " + "FROM department ";
+			st = conn.prepareStatement(query);
+			rs = st.executeQuery();
+			while (rs.next()) {
+				Department dep = this.instantiateDepartment(rs);
+				list.add(dep);
+			}
+			return list;
+		} catch (SQLException e) {
+			throw new DbException(e.getMessage());
+		} finally {
+			DB.closeStatement(st);
+			DB.closeResultSet(rs);
+		}
 	}
 
 }
